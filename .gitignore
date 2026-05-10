@@ -1,0 +1,26 @@
+# Build
+build/
+cmake-build-*/
+out/
+
+# SFML (external dependency — download separately)
+SFML-2.6.2/
+
+# IDE
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+
+# Binaries
+*.exe
+*.dll
+*.lib
+*.pdb
+*.obj
+*.o
+
+# OS
+Thumbs.db
+.DS_Store

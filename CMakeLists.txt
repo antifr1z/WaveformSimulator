@@ -5,15 +5,19 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# Platform-specific optimization flags are applied per-target below.
+# Default to Debug for single-config generators if not specified
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+    set(CMAKE_BUILD_TYPE "Debug" CACHE STRING "Choose the type of build." FORCE)
+endif()
+
 # Find threading library (pthreads on Linux, native on Windows)
 find_package(Threads REQUIRED)
 
 # Find SFML (graphics, window, system modules for GUI rendering)
-# On Windows: expects SFML-2.6.2/ folder alongside CMakeLists.txt
-# On Linux:   expects SFML installed via package manager (libsfml-dev)
-if(WIN32)
-    set(SFML_DIR "${CMAKE_SOURCE_DIR}/SFML-2.6.2/lib/cmake/SFML")
+# On Windows: prefers SFML-2.6.2 folder alongside CMakeLists.txt.
+# On Linux: expects SFML installed via package manager (libsfml-dev).
+if(WIN32 AND (NOT DEFINED SFML_DIR OR SFML_DIR STREQUAL "" OR SFML_DIR STREQUAL "SFML_DIR-NOTFOUND"))
+    set(SFML_DIR "${CMAKE_SOURCE_DIR}/SFML-2.6.2/lib/cmake/SFML" CACHE PATH "Path to SFMLConfig.cmake" FORCE)
 endif()
 find_package(SFML 2.6 COMPONENTS graphics window system REQUIRED)
 
@@ -38,28 +42,6 @@ set(HEADERS
 add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})
 
 target_include_directories(${PROJECT_NAME} PRIVATE src)
-
-target_compile_options(${PROJECT_NAME} PRIVATE
-    $<$<AND:$<CONFIG:Release>,$<CXX_COMPILER_ID:MSVC>>:/O2>
-    $<$<AND:$<CONFIG:Release>,$<CXX_COMPILER_ID:MSVC>>:/Oi>
-    $<$<AND:$<CONFIG:Release>,$<CXX_COMPILER_ID:MSVC>>:/Ot>
-    $<$<AND:$<CONFIG:Release>,$<CXX_COMPILER_ID:MSVC>>:/GL>
-    $<$<AND:$<CONFIG:Release>,$<CXX_COMPILER_ID:MSVC>>:/fp:fast>
-    $<$<AND:$<CONFIG:Release>,$<CXX_COMPILER_ID:GNU>>:-O3>
-    $<$<AND:$<CONFIG:Release>,$<CXX_COMPILER_ID:GNU>>:-march=native>
-    $<$<AND:$<CONFIG:Release>,$<CXX_COMPILER_ID:GNU>>:-ffast-math>
-    $<$<AND:$<CONFIG:Release>,$<CXX_COMPILER_ID:GNU>>:-flto>
-    $<$<AND:$<CONFIG:Release>,$<CXX_COMPILER_ID:Clang>>:-O3>
-    $<$<AND:$<CONFIG:Release>,$<CXX_COMPILER_ID:Clang>>:-march=native>
-    $<$<AND:$<CONFIG:Release>,$<CXX_COMPILER_ID:Clang>>:-ffast-math>
-    $<$<AND:$<CONFIG:Release>,$<CXX_COMPILER_ID:Clang>>:-flto>
-)
-
-target_link_options(${PROJECT_NAME} PRIVATE
-    $<$<AND:$<CONFIG:Release>,$<CXX_COMPILER_ID:MSVC>>:/LTCG>
-    $<$<AND:$<CONFIG:Release>,$<CXX_COMPILER_ID:GNU>>:-flto>
-    $<$<AND:$<CONFIG:Release>,$<CXX_COMPILER_ID:Clang>>:-flto>
-)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
     Threads::Threads

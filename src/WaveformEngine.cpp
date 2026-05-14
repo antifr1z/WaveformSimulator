@@ -24,24 +24,27 @@ void computeChunk(
     // Since transitions are sorted by time, we can use a sliding window approach.
 
     const int numTransitions = static_cast<int>(transitions.size());
-    auto startTransactionIndx = 0;
-    auto endTransactionIndx = 0;
+    int startTransactionIndx = 0; 
+    int endTransactionIndx = 0;
 
-    for (startTransactionIndx = startSample; startTransactionIndx < endSample; ++startTransactionIndx) {
-        const double t = startTransactionIndx * samplingPeriod;
+    for (int s = startSample; s < endSample; ++s) {
+        const double t = s * samplingPeriod;
         double sum = 0.0;
 
-        // Iterate only transitions whose pulse could reach this sample point.
-        // Transitions are sorted by timeNs, so we can break early when past range.
-        for (int tr = 0; tr < numTransitions; ++tr) {
+        // Skip transitions that are too old for this sample.
+        while (startTransactionIndx < numTransitions && t - transitions[startTransactionIndx].timeNs > tailDuration) {
+            ++startTransactionIndx;
+        }
+
+        // Advance endTransactionIndx to the first transition too far in the future.
+        while (endTransactionIndx < numTransitions &&
+               transitions[endTransactionIndx].timeNs <= t + tailDuration) {
+            ++endTransactionIndx;
+        }
+
+         // Iterate from startTransition forward.
+        for (int tr = startTransactionIndx; tr < endTransactionIndx; ++tr) {
             const double dt = t - transitions[tr].timeNs;
-
-            // If this transition is too far in the future, all subsequent ones are too
-            if (dt < -tailDuration) break;
-
-            // Skip if this transition is too far in the past
-            if (dt > tailDuration) continue;
-
             const double pulse = evaluatePulse(pulseType, dt, constants);
             sum += transitions[tr].isPositive ? pulse : -pulse;
         }

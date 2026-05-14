@@ -24,9 +24,11 @@ void computeChunk(
     // Since transitions are sorted by time, we can use a sliding window approach.
 
     const int numTransitions = static_cast<int>(transitions.size());
+    auto startTransactionIndx = 0;
+    auto endTransactionIndx = 0;
 
-    for (int s = startSample; s < endSample; ++s) {
-        const double t = s * samplingPeriod;
+    for (startTransactionIndx = startSample; startTransactionIndx < endSample; ++startTransactionIndx) {
+        const double t = startTransactionIndx * samplingPeriod;
         double sum = 0.0;
 
         // Iterate only transitions whose pulse could reach this sample point.

@@ -5,15 +5,7 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# Platform-specific optimization flags
-if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-    add_compile_options(/O2 /Oi /Ot /GL /fp:fast)
-    add_link_options(/LTCG)
-elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    add_compile_options(-O3 -march=native -ffast-math -flto)
-    add_link_options(-flto)
-endif()
-
+# Platform-specific optimization flags are applied per-target below.
 # Find threading library (pthreads on Linux, native on Windows)
 find_package(Threads REQUIRED)
 
@@ -46,6 +38,28 @@ set(HEADERS
 add_executable(${PROJECT_NAME} ${SOURCES} ${HEADERS})
 
 target_include_directories(${PROJECT_NAME} PRIVATE src)
+
+target_compile_options(${PROJECT_NAME} PRIVATE
+    $<$<AND:$<CONFIG:Release>,$<CXX_COMPILER_ID:MSVC>>:/O2>
+    $<$<AND:$<CONFIG:Release>,$<CXX_COMPILER_ID:MSVC>>:/Oi>
+    $<$<AND:$<CONFIG:Release>,$<CXX_COMPILER_ID:MSVC>>:/Ot>
+    $<$<AND:$<CONFIG:Release>,$<CXX_COMPILER_ID:MSVC>>:/GL>
+    $<$<AND:$<CONFIG:Release>,$<CXX_COMPILER_ID:MSVC>>:/fp:fast>
+    $<$<AND:$<CONFIG:Release>,$<CXX_COMPILER_ID:GNU>>:-O3>
+    $<$<AND:$<CONFIG:Release>,$<CXX_COMPILER_ID:GNU>>:-march=native>
+    $<$<AND:$<CONFIG:Release>,$<CXX_COMPILER_ID:GNU>>:-ffast-math>
+    $<$<AND:$<CONFIG:Release>,$<CXX_COMPILER_ID:GNU>>:-flto>
+    $<$<AND:$<CONFIG:Release>,$<CXX_COMPILER_ID:Clang>>:-O3>
+    $<$<AND:$<CONFIG:Release>,$<CXX_COMPILER_ID:Clang>>:-march=native>
+    $<$<AND:$<CONFIG:Release>,$<CXX_COMPILER_ID:Clang>>:-ffast-math>
+    $<$<AND:$<CONFIG:Release>,$<CXX_COMPILER_ID:Clang>>:-flto>
+)
+
+target_link_options(${PROJECT_NAME} PRIVATE
+    $<$<AND:$<CONFIG:Release>,$<CXX_COMPILER_ID:MSVC>>:/LTCG>
+    $<$<AND:$<CONFIG:Release>,$<CXX_COMPILER_ID:GNU>>:-flto>
+    $<$<AND:$<CONFIG:Release>,$<CXX_COMPILER_ID:Clang>>:-flto>
+)
 
 target_link_libraries(${PROJECT_NAME} PRIVATE
     Threads::Threads

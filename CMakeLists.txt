@@ -5,23 +5,19 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# Platform-specific optimization flags
-if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
-    add_compile_options(/O2 /Oi /Ot /GL /fp:fast)
-    add_link_options(/LTCG)
-elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-    add_compile_options(-O3 -march=native -ffast-math -flto)
-    add_link_options(-flto)
+# Default to Debug for single-config generators if not specified
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+    set(CMAKE_BUILD_TYPE "Debug" CACHE STRING "Choose the type of build." FORCE)
 endif()
 
 # Find threading library (pthreads on Linux, native on Windows)
 find_package(Threads REQUIRED)
 
 # Find SFML (graphics, window, system modules for GUI rendering)
-# On Windows: expects SFML-2.6.2/ folder alongside CMakeLists.txt
-# On Linux:   expects SFML installed via package manager (libsfml-dev)
-if(WIN32)
-    set(SFML_DIR "${CMAKE_SOURCE_DIR}/SFML-2.6.2/lib/cmake/SFML")
+# On Windows: prefers SFML-2.6.2 folder alongside CMakeLists.txt.
+# On Linux: expects SFML installed via package manager (libsfml-dev).
+if(WIN32 AND (NOT DEFINED SFML_DIR OR SFML_DIR STREQUAL "" OR SFML_DIR STREQUAL "SFML_DIR-NOTFOUND"))
+    set(SFML_DIR "${CMAKE_SOURCE_DIR}/SFML-2.6.2/lib/cmake/SFML" CACHE PATH "Path to SFMLConfig.cmake" FORCE)
 endif()
 find_package(SFML 2.6 COMPONENTS graphics window system REQUIRED)
 
